@@ -25,7 +25,9 @@ class _LoginScreen extends State<LoginScreen> {
   AtClientPreference? atClientPreference;
   final AtSignLogger _logger = AtSignLogger('Plugin example app');
   Future<void> call() async {
-    await clientSDKInstance.getAtClientPreference().then((AtClientPreference? value) => atClientPreference = value);
+    await clientSDKInstance
+        .getAtClientPreference()
+        .then((AtClientPreference? value) => atClientPreference = value);
   }
 
   @override
@@ -49,25 +51,35 @@ class _LoginScreen extends State<LoginScreen> {
             Center(
               child: TextButton(
                 onPressed: () async {
-                  Onboarding(
+                  final result = await AtOnboarding.onboard(
                     context: context,
-                    atClientPreference: atClientPreference!,
-                    domain: MixedConstants.ROOT_DOMAIN,
-                    appColor: const Color(0xFFF05E3E),
-                    onboard: (Map<String?, AtClientService> value, String? atsign) {
-                      atSign = atsign;
-                      clientSDKInstance.atsign = atsign!;
-                      clientSDKInstance.atClientServiceMap = value;
-                      clientSDKInstance.atClientServiceInstance = value[atsign];
-                      _logger.finer('Successfully onboarded $atsign');
-                    },
-                    onError: (Object? error) {
-                      _logger.severe('Onboarding throws $error error');
-                    },
-                    nextScreen: HomeScreen(),
-                    appAPIKey: MixedConstants.prodAPIKey,
-                    rootEnvironment: RootEnvironment.Production,
+                    config: AtOnboardingConfig(
+                      atClientPreference: atClientPreference!,
+                      rootEnvironment: RootEnvironment.Production,
+                      domain: MixedConstants.ROOT_DOMAIN,
+                      appAPIKey: MixedConstants.prodAPIKey,
+                    ),
                   );
+                  switch (result.status) {
+                    case AtOnboardingResultStatus.success:
+                      atSign = result.atsign;
+                      clientSDKInstance.atsign = result.atsign!;
+                      // clientSDKInstance.atClientServiceMap = result.value;
+                      // clientSDKInstance.atClientServiceInstance = value[atsign];
+                      _logger.finer('Successfully onboarded $atSign');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                      break;
+                    case AtOnboardingResultStatus.error:
+                      _logger.severe(
+                          'Onboarding throws ${result.errorCode} ${result.message} error');
+                      break;
+                    case AtOnboardingResultStatus.cancel:
+                      _logger.severe('Onboarding cancelled by user');
+                      break;
+                  }
                 },
                 child: const Text(AppStrings.scanQr),
               ),
@@ -77,9 +89,11 @@ class _LoginScreen extends State<LoginScreen> {
             ),
             TextButton(
               onPressed: () async {
-                KeyChainManager _keyChainManager = KeyChainManager.getInstance();
-                List<String>? _atSignsList = await _keyChainManager.getAtSignListFromKeychain();
-                if (_atSignsList == null || _atSignsList.isEmpty) {
+                KeyChainManager _keyChainManager =
+                    KeyChainManager.getInstance();
+                List<String>? _atSignsList =
+                    await _keyChainManager.getAtSignListFromKeychain();
+                if (_atSignsList.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(

@@ -22,7 +22,8 @@ class ClientSdkService {
 
   AtClientService? atClientServiceInstance;
   final AtClientManager atClientInstance = AtClientManager.getInstance();
-  Map<String?, AtClientService> atClientServiceMap = <String?, AtClientService>{};
+  Map<String?, AtClientService> atClientServiceMap =
+      <String?, AtClientService>{};
   String? atsign;
 
   void _reset() {
@@ -43,7 +44,8 @@ class ClientSdkService {
   }
 
   Future<AtClientPreference> getAtClientPreference({String? cramSecret}) async {
-    Directory appDocumentDirectory = await path_provider.getApplicationSupportDirectory();
+    Directory appDocumentDirectory =
+        await path_provider.getApplicationSupportDirectory();
     String path = appDocumentDirectory.path;
     AtClientPreference _atClientPreference = AtClientPreference()
       ..isLocalStoreRequired = true
@@ -56,7 +58,8 @@ class ClientSdkService {
   }
 
   Future<ServerStatus?> _checkAtSignStatus(String atsign) async {
-    AtStatusImpl atStatusImpl = AtStatusImpl(rootUrl: conf.MixedConstants.ROOT_DOMAIN);
+    AtStatusImpl atStatusImpl =
+        AtStatusImpl(rootUrl: conf.MixedConstants.ROOT_DOMAIN);
     AtStatus status = await atStatusImpl.get(atsign);
     return status.serverStatus;
   }
@@ -68,7 +71,8 @@ class ClientSdkService {
       AtValue? result = await _getAtClientForAtsign()!.get(atKey);
       return result.value;
     } on AtClientException catch (atClientExcep) {
-      _logger.severe('❌ AtClientException : ${atClientExcep.errorMessage}');
+      _logger
+          .severe('❌ AtClientException : ${atClientExcep.getTraceMessage()}');
       return null;
     } catch (e) {
       _logger.severe('❌ Exception : ${e.toString()}');
@@ -82,7 +86,8 @@ class ClientSdkService {
     try {
       return _getAtClientForAtsign()!.put(atKey, value);
     } on AtClientException catch (atClientExcep) {
-      _logger.severe('❌ AtClientException : ${atClientExcep.errorMessage}');
+      _logger
+          .severe('❌ AtClientException : ${atClientExcep.getTraceMessage()}');
       return false;
     } catch (e) {
       _logger.severe('❌ Exception : ${e.toString()}');
@@ -96,7 +101,8 @@ class ClientSdkService {
     try {
       return _getAtClientForAtsign()!.delete(atKey);
     } on AtClientException catch (atClientExcep) {
-      _logger.severe('❌ AtClientException : ${atClientExcep.errorMessage}');
+      _logger
+          .severe('❌ AtClientException : ${atClientExcep.getTraceMessage()}');
       return false;
     } catch (e) {
       _logger.severe('❌ Exception : ${e.toString()}');
@@ -105,7 +111,8 @@ class ClientSdkService {
   }
 
   Future<List<AtKey>> getAtKeys({String? regex, String? sharedBy}) async =>
-      _getAtClientForAtsign()!.getAtKeys(regex: conf.MixedConstants.NAMESPACE, sharedBy: sharedBy);
+      _getAtClientForAtsign()!
+          .getAtKeys(regex: conf.MixedConstants.NAMESPACE, sharedBy: sharedBy);
 
   /// Fetches atsign from device keychain.
   Future<String?> getAtSign() async => _keyChainManager.getAtSign();
@@ -119,7 +126,8 @@ class ClientSdkService {
     _reset();
   }
 
-  Future<void> notify(AtKey atKey, String value, OperationEnum operation) async {
+  Future<void> notify(
+      AtKey atKey, String value, OperationEnum operation) async {
     if (operation == OperationEnum.update) {
       atClientInstance.notificationService.notify(
         NotificationParams.forUpdate(
